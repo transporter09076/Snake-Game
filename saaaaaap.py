@@ -3,9 +3,32 @@ import turtle
 import time
 import random
 import sqlite3
+from tkinter import *
+
+name = ""
+
+data = sqlite3.connect("snake.db")
+crsr = data.cursor()
+
+crsr.execute("CREATE TABLE IF NOT EXISTS Leaderboard(name VARCHAR(50),\
+score INT(3))")
 
 delay = 0.1
 score = 0
+
+def savename():
+    global name
+    name = n.get()
+    sc_win.destroy()
+
+sc_win = Tk()
+sc_win.geometry("600x200")
+Label(sc_win,text = "Enter your name", font=("Candara", 16, "normal")).pack(pady=10)
+n = Entry(sc_win, font=("Candara", 16, "normal"))
+n.pack(pady=10)
+btn = Button(sc_win,text = "Confirm",bg = "Blue",fg = "White", font=("Candara", 12, "normal"),command=savename)
+btn.pack(pady=10)
+sc_win.title("Snake game")
 
 #Creating a window
 root = turtle.Screen()
@@ -78,12 +101,29 @@ root.onkeypress(goright,"d")
 
 segments = []
 
+def Submit(scr):
+    # connecting to the database  
+    conn = sqlite3.connect("snake.db") 
+    # cursor  
+    crsr = conn.cursor() 
+    # Insert Into Table
+    crsr.execute("INSERT INTO Leaderboard VALUES (:name,  :score)",
+        {
+            'name' : name,
+            'score' : scr
+            
+        }
+    )
+    conn.commit() # Commit all the changes to the database
+    conn.close() 
+
 #Maingame play loop
 while True:
     root.update()
     if head.xcor() > 280 or head.xcor() < -280 or head.ycor() > 280 or head.ycor() < -280:
         pen.clear()
-        pen.write("Game Over", align="center", font=("Candara", 30, "normal"))
+        pen.write("Game Over    " + name + "    " + str(score), align="center", font=("Candara", 30, "normal"))
+        Submit(score)
         break
     if head.distance(apple) < 20:
         x = random.randint(-270,270)
@@ -119,13 +159,17 @@ while True:
             delay = 0.1    
             score = 0
             pen.clear()
-            pen.write("Game Over", align="center", font=("candara", 24, "bold"))
+            pen.write("Game Over    " + name + "    " + str(score), align="center", font=("candara", 24, "bold"))
+            Submit(score)
     time.sleep(delay)
 
 
     
 
 root.mainloop()
+
+
+
 
 
 
